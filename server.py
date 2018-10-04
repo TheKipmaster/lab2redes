@@ -1,6 +1,6 @@
 import socket
 port = 65000
-host = '172.29.19.222'
+host = '127.0.0.1'
 
 # requisita API do SO uma conexao AF_INET (IPV4)
 #   com protocolo de transporte SOCK_STREAM (TCP)
@@ -23,13 +23,13 @@ while open:
 
     while open:
         message = clientsocket.recv(512)
-        clientsocket.send(bytes('entregue'))
-        clientsocket.send(bytes('continuando...'))
+        clientsocket.send(bytes('Entregue', 'utf-8'))
+        clientsocket.send(bytes('Continuando...', 'utf-8'))
         # sck.send(bytes('continuando...'))
 
-        print("Mensagem:" + message)
-        print("Endereco:", address)
+        print("Mensagem: ", message.decode())
+        print("Endereco: ", address)
 
-        if '/quit' in message:
+        if '/quit' in message.decode():
             open = False
 sck.close()
