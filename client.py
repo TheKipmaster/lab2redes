@@ -16,8 +16,6 @@ sck.connect((host, 65000))
 def outbound():
     while True:
         outbound = input('>> ')
-        if outbound is '/quit':
-            sys.exit()
         sck.send(bytes(outbound, 'utf-8'))
         sleep(0.2)
     return
