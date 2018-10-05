@@ -1,12 +1,10 @@
 import socket
+import urllib.request
+from channel import Channel
+
 port = 65000
-host = '192.168.0.16'
-
-
-class Channel:
-    def __init__(self, name):
-        self.name = name
-        self.clients = {}
+#host = '192.168.0.16'
+host = '172.29.37.38'
 
 class Server:
 
@@ -19,10 +17,10 @@ class Server:
 
         # Handlers para comandos
         self.handlers = {"NICK"   : self.nickClientHandler,
-                         "USUARIO": self.newClientHandler,
-                         "SAIR"   : self.deleteClientHandler,
+                         "USUARIO": self.userClientHandler,
+                         "SAIR"   : self.quitClientHandler,
                          "ENTRAR" : self.subscribeChannelHandler,
-                         "SAIRC"  : self.unsubscribeChannelHandler,
+                         "SAIRC"  : self.quitChannelHandler,
                          "LISTAR" : self.listChannelHandler,
                         }
         
@@ -53,9 +51,8 @@ class Server:
                 print("Mensagem: ", message.decode())
                 print("Endereco: ", address)
 
-                if '/quit' in message.decode():
+                if '/SAIR' in message.decode():
                     open = False
-                    clientsock.send(bytes('Conexão Fechada', 'utf-8'))
                     pass
 
                 #clientsock.send(bytes('Entregue', 'utf-8'))
@@ -77,12 +74,38 @@ class Server:
         answer = ''
 
         if(message[0] == '/'):
-            answer += 'Tratar comando: '
-            answer += message
+            message = message [1:] 
+            #answer += 'Tratar comando: '
+            #answer += message
+            answer = self.commands(clientsock, clientAddr, message)
 
         else:
             answer = 'Enviar para o canal: '
             answer += message
+
+        return answer
+
+    def commands(self, clientsock, clientAddr, message):
+        from client import Client
+
+        answer = ''
+
+        if clientAddr not in self.clients.keys():
+            self.clients[clientAddr] = Client(clientAddr, clientsock)
+            self.canais[""].clients[clientAddr] = self.clients[clientAddr]
+
+        if message in self.handlers.keys():
+            #Verificar canal
+
+        else:
+            answer += 'Comando inválido, tente:'
+            answer += '\n/NICK'
+            answer += '\n/USUARIO'
+            answer += '\n/SAIR'
+            answer += '\n/ENTRAR'
+            answer += '\n/SAIRC'
+            answer += '\n/LISTAR'
+
 
         """
         commands = message.split('\n') # comandos separados por nova linha
@@ -91,7 +114,7 @@ class Server:
 
 
         if clientAddr not in self.clients.keys():
-            self.clients[clientAddr] = ServerClient(clientAddr, clientsock)
+            self.clients[clientAddr] = Client(clientAddr, clientsock)
             self.canais[""].clients[clientAddr] = self.clients[clientAddr]
 
         client = self.clients[clientAddr]
@@ -116,26 +139,40 @@ class Server:
         """
         return answer
 
+    #Enviar mensagem para o canal
     def sendMsgChannel(self, msg, channel):
         for client in self.canais[channel].clients:
             client.sendMsg(msg)
+        print('Enviar mensagem para o canal')
 
+    # Criar apelido ou mudar anterior
     def nickClientHandler(self, clientAddr, args):
+        print('Criar apelido')
         pass
 
-    def newClientHandler(self, clientAddr, args):
+   # Especificar nome do usuario
+    def userClientHandler(self, clientAddr, args):
+        print('Nome usr')
         pass
 
-    def deleteClientHandler(self, clientAddr, args):
+    # Sair do canal
+    def quitClientHandler(self, clientAddr, args):
+        print('Sair do servidor')
         pass
 
+    # Entrar no canal
     def subscribeChannelHandler(self, clientAddr, args):
+        print('Entrar no canal')
         pass
 
-    def unsubscribeChannelHandler(self, clientAddr, args):
+    # Sair do canal
+    def quitChannelHandler(self, clientAddr, args):
+        print('Sair do canal')
         pass
 
+    # Listar canais
     def listChannelHandler(self, clientAddr, args):
+        print('Listar os canais')
         pass
 
 def main():

@@ -6,7 +6,8 @@ import multiprocessing as mp
 from time import sleep
 
 port = 65000
-host = '192.168.0.16'
+#host = '192.168.0.16'
+host = '172.29.37.38'
 
 class Client:
     numClients = 0
@@ -38,6 +39,7 @@ def outbound():
         except:
             print('Não pode completar a ação') 
             open = False   
+            return 0
     return
 
 # Imprime mensagens para o usuario
