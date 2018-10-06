@@ -44,6 +44,15 @@ class Server:
         while open:
             # aceita requisição de conexão
             (clientsock, address) = self.sock.accept()
+            welcome = 'Bem vindo, utilize os comandos: '
+            welcome += '\n/NICK -nickName'
+            welcome += '\n/USUARIO -hostName'
+            welcome += '\n/SAIR'
+            welcome += '\n/ENTRAR -nomeCanal'
+            welcome += '\n/SAIRC'
+            welcome += '\n/LISTAR'            
+
+            self.sendMessage(welcome, clientsock)
 
             while open:
                 # recebe do socket do cliente e uma mensagem de 512 bytes
@@ -98,12 +107,8 @@ class Server:
 
     def commands(self, clientAddr, message):
         answer = ''
-
         command = message.partition(' ')[0]
         args = message.partition(' -')[2]
-
-        print(command)
-        print(args)
 
         if (command in self.handlers.keys()):
            answer = self.handlers[command](clientAddr, args)
@@ -141,7 +146,7 @@ class Server:
 
     # Sair do canal
     def quitClientHandler(self, clientAddr, args):
-        return 
+        return self.clients[clientAddr].nickname + 'saiu'
 
     # Entrar no canal
     def subscribeChannelHandler(self, clientAddr, args):
