@@ -7,4 +7,7 @@ class Channel:
         return "<Channel name:%s clients:%s>" % (self.name, self.clients)
 
     def __str__(self):
-        return "From str method of Channel: a is %s, b is %s" % (self.name, self.clients)
+        return "From str method of Channel: \nname is %s, \nclients is %s" % (self.name, self.clients)
+
+    def getName(self):
+        return "%s" % (self.name)

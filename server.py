@@ -13,8 +13,9 @@ class Server:
         self.clients = {}
         self.canais   = {}
 
-        self.canais[""] = Channel("")
-
+        self.canais[""] = Channel("Canal 1")
+        self.canais["Canal 2"] = Channel("Canal 2")
+        self.canais["Canal 3"] = Channel("Canal 3")
         # Handlers para comandos
         self.handlers = {"NICK"   : self.nickClientHandler,
                          "USUARIO": self.userClientHandler,
@@ -56,14 +57,17 @@ class Server:
                     pass
 
                 # processa mensagem
-                answer, client = self.parseCommands(clientsock, address, message)
+                answer, client, isCommand = self.parseCommands(clientsock, address, message)
                 if len(answer) > 0:
-                    self.sendMsgChannel(answer, client.channel)
+                    if(isCommand):
+                        self.sendMessage(answer, client.sock)
+                    else:
+                        self.sendMsgChannel(answer, client.channel)
         self.sock.close()
         pass
 
-    def sendMessage(self, clientsock, answer):
-        clientsock.send(bytes(answer, 'utf-8'))
+    def sendMessage(self, msg, clientsock):
+        clientsock.send(bytes(msg, 'utf-8'))
 
     def parseCommands(self, clientsock, clientAddr, message):
         from client import Client
@@ -77,31 +81,26 @@ class Server:
 
         client = self.clients[clientAddr]
 
-        if message in self.handlers.keys():
-           answer = self.handlers[message](clientAddr, message)
-        else:
-            answer += 'Comando inválido, tente:'
-            answer += '\n/NICK'
-            answer += '\n/USUARIO'
-            answer += '\n/SAIR'
-            answer += '\n/ENTRAR'
-            answer += '\n/SAIRC'
-            answer += '\n/LISTAR'
-
         if(message[0] == '/'):
             message = message [1:] 
-            answer = self.commands(clientsock, clientAddr, message)
+            answer = self.commands(clientAddr, message)
+            return answer, client, True
 
         else:
             answer = message
+            return answer, client, False
 
-        return answer, client
-
-    def commands(self, clientsock, clientAddr, message):
+    def commands(self, clientAddr, message):
         answer = ''
 
-        if message in self.handlers.keys():
-           answer = self.handlers[message](clientAddr, message)
+        command = message.partition(' ')[0]
+        args = message.partition(' ')[2]
+
+        print(command)
+        print(args)
+
+        if command in self.handlers.keys():
+           answer = self.handlers[command](clientAddr, args)
         else:
             answer += 'Comando inválido, tente:'
             answer += '\n/NICK'
@@ -111,37 +110,6 @@ class Server:
             answer += '\n/SAIRC'
             answer += '\n/LISTAR'
 
-
-        """
-        commands = message.split('\n') # comandos separados por nova linha
-        unrecognized_commands = []
-        invalid_parameters = []
-
-
-        if clientAddr not in self.clients.keys():
-            self.clients[clientAddr] = Client(clientAddr, clientsock)
-            self.canais[""].clients[clientAddr] = self.clients[clientAddr]
-
-        client = self.clients[clientAddr]
-
-        for command in commands:
-            comm_n_args = command.split(' ')
-            if comm_n_args[0][0] is '?':
-                if comm_n_args[0][1:] in self.handlers.keys():
-                    ans = self.handlers[comm_n_args[0][1:]](clientAddr, comm_n_args[1:])
-                    if len(ans) > 0:
-                        invalid_parameters += ans
-                else:
-                    unrecognized_commands += comm_n_args[0]
-            else:
-                self.sendMsgChannel(comm_n_args[1:], client.channel)
-
-        answer = ""
-        if len(unrecognized_commands) > 0:
-            answer += "Unrecognized commands: %s" % unrecognized_commands
-        if len(invalid_parameters) > 0:
-            answer += "Invalid parameters: %s\n" % invalid_parameters
-        """
         return answer
 
     # Enviar mensagem para o canal
@@ -151,7 +119,8 @@ class Server:
 
     # Criar apelido ou mudar anterior
     def nickClientHandler(self, clientAddr, args):
-        return 'Criar apelido'
+        self.clients[clientAddr].nickname = args
+        return 'Nickname alterado para: ' + args
         
 
    # Especificar nome do usuario
@@ -172,7 +141,12 @@ class Server:
 
     # Listar canais
     def listChannelHandler(self, clientAddr, args):
-        return 'Listar os canais'
+        list = 'Lista de canais\n'
+        for canal in self.canais:
+            print('Nome do canal: ', canal)
+            list += '-' +canal + '\n'
+
+        return list
 
 def main():
     Sever()
