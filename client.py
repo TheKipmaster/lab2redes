@@ -35,18 +35,21 @@ class Client:
 # Conecta o socket
 sck = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 sck.connect((host, 65000))
+processes = []
 
 # Le mensagem do usuario
 def outbound():
     open = True
 
     while open:
-        try:
-            outbound = input('>> ')
-            sck.send(bytes(outbound, 'utf-8'))
-            sleep(0.2)
-        except:
-            print('Não pode completar a ação') 
+        if(sck.fileno() != -1):
+            try:
+                outbound = input('>> ')
+                sck.send(bytes(outbound, 'utf-8'))
+                sleep(0.2)
+            except:
+                open = False
+        else:
             open = False
     return
 
@@ -57,15 +60,17 @@ def inbound():
     while open:
         try:
             inbound = sck.recv(512)
-            if(len(inbound) > 0):
-                print('<<', inbound.decode())
+            if(inbound.decode() == '/SAIR'):
+                print('Conexão fechada')
+                sck.close();
+            else:
+                if(len(inbound) > 0):
+                    print('<<', inbound.decode())
         except:
-            print('Não pode completar a ação')
             open = False
     return
 
 def main():
-    processes = []
 
     # Cria os processos
     processes.append(Thread(target=outbound))

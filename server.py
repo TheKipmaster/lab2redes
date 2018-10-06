@@ -13,7 +13,7 @@ class Server:
         self.clients = {}
         self.canais   = {}
 
-        self.canais[""] = Channel("Canal 1")
+        self.canais["Canal 1"] = Channel("Canal 1")
         self.canais["Canal 2"] = Channel("Canal 2")
         self.canais["Canal 3"] = Channel("Canal 3")
         # Handlers para comandos
@@ -52,7 +52,8 @@ class Server:
                 print("Mensagem: ", message.decode())
                 print("Endereco: ", address)
 
-                if '/SAIR' in message.decode():
+                if(message.decode() == '/SAIR'):
+                    self.sendMessage('/SAIR', clientsock)
                     open = False
                     pass
 
@@ -77,36 +78,41 @@ class Server:
 
         if clientAddr not in self.clients.keys():
             self.clients[clientAddr] = Client(clientAddr, clientsock)
-            self.canais[""].clients[clientAddr] = self.clients[clientAddr]
-
+            #self.canais[""].clients[clientAddr] = self.clients[clientAddr]
+            
         client = self.clients[clientAddr]
+
+        print('Canal: ', self.clients[clientAddr].channel)
 
         if(message[0] == '/'):
             message = message [1:] 
             answer = self.commands(clientAddr, message)
             return answer, client, True
-
         else:
-            answer = message
-            return answer, client, False
+            if(self.clients[clientAddr].channel == ""):
+                answer = 'Entre em um canal para começar uma conversa'
+                return answer, client, True
+            else:
+                answer = message
+                return answer, client, False
 
     def commands(self, clientAddr, message):
         answer = ''
 
         command = message.partition(' ')[0]
-        args = message.partition(' ')[2]
+        args = message.partition(' -')[2]
 
         print(command)
         print(args)
 
-        if command in self.handlers.keys():
+        if (command in self.handlers.keys()):
            answer = self.handlers[command](clientAddr, args)
         else:
             answer += 'Comando inválido, tente:'
-            answer += '\n/NICK'
-            answer += '\n/USUARIO'
+            answer += '\n/NICK -nickName'
+            answer += '\n/USUARIO -hostName'
             answer += '\n/SAIR'
-            answer += '\n/ENTRAR'
+            answer += '\n/ENTRAR -nomeCanal'
             answer += '\n/SAIRC'
             answer += '\n/LISTAR'
 
@@ -119,29 +125,46 @@ class Server:
 
     # Criar apelido ou mudar anterior
     def nickClientHandler(self, clientAddr, args):
-        self.clients[clientAddr].nickname = args
-        return 'Nickname alterado para: ' + args
-        
+        if(args != ""):
+            self.clients[clientAddr].nickname = args
+            return 'Nickname alterado para: ' + args
+        else:
+            return '/NICK -nickName'
 
    # Especificar nome do usuario
     def userClientHandler(self, clientAddr, args):
-        self.clients[clientAddr].hostname = args
-        return 'HostName alterado para: ' + args
+        if(args != ""):
+            self.clients[clientAddr].hostname = args
+            return 'HostName alterado para: ' + args
+        else:
+            return '/USUARIO -hostName'
+
     # Sair do canal
     def quitClientHandler(self, clientAddr, args):
-        return 'Sair do servidor'
+        return 
 
     # Entrar no canal
     def subscribeChannelHandler(self, clientAddr, args):
         if args in self.canais:
             self.canais[args].clients[clientAddr] = self.clients[clientAddr]
+            self.clients[clientAddr].channel = args
             return 'Entrou no canal: ' + args
         else:
-           return 'Canal "%s" Inválido\n' % args + self.listChannelHandler(clientAddr, args)
+            if(args != ""):
+                return 'Canal "%s" Inválido\n' % args + self.listChannelHandler(clientAddr, args)
+            else:
+                return '/ENTRAR -nomeCanal'
 
     # Sair do canal
     def quitChannelHandler(self, clientAddr, args):
-        return 'Sair do canal'
+        channel = self.clients[clientAddr].channel
+        #print('ClientAddr', clientAddr)
+        #print('Channel', channel)
+        #print('Canais[channel]', self.canais[channel])
+        print('Clients: \n', self.canais[channel].clients[clientAddr])
+        #self.canais[channel].remove(clients[clientAddr]);
+        self.clients[clientAddr].channel == ""
+        return 'Saiu do canal' + channel
 
     # Listar canais
     def listChannelHandler(self, clientAddr, args):
