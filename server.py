@@ -55,13 +55,10 @@ class Server:
                     open = False
                     pass
 
-                #clientsock.send(bytes('Entregue', 'utf-8'))
-                #clientsock.send(bytes('Continuando...', 'utf-8'))
-
                 # processa mensagem
-                answer = self.parseCommands(clientsock, address, message)
+                answer, client = self.parseCommands(clientsock, address, message)
                 if len(answer) > 0:
-                    self.sendMessage(clientsock, answer)
+                    self.sendMsgChannel(answer, client.channel)
         self.sock.close()
         pass
 
@@ -69,34 +66,42 @@ class Server:
         clientsock.send(bytes(answer, 'utf-8'))
 
     def parseCommands(self, clientsock, clientAddr, message):
-        message = message.decode()
-
-        answer = ''
-
-        if(message[0] == '/'):
-            message = message [1:] 
-            #answer += 'Tratar comando: '
-            #answer += message
-            answer = self.commands(clientsock, clientAddr, message)
-
-        else:
-            answer = 'Enviar para o canal: '
-            answer += message
-
-        return answer
-
-    def commands(self, clientsock, clientAddr, message):
         from client import Client
 
+        message = message.decode()
         answer = ''
 
         if clientAddr not in self.clients.keys():
             self.clients[clientAddr] = Client(clientAddr, clientsock)
             self.canais[""].clients[clientAddr] = self.clients[clientAddr]
 
-        if message in self.handlers.keys():
-            #Verificar canal
+        client = self.clients[clientAddr]
 
+        if message in self.handlers.keys():
+           answer = self.handlers[message](clientAddr, message)
+        else:
+            answer += 'Comando inválido, tente:'
+            answer += '\n/NICK'
+            answer += '\n/USUARIO'
+            answer += '\n/SAIR'
+            answer += '\n/ENTRAR'
+            answer += '\n/SAIRC'
+            answer += '\n/LISTAR'
+
+        if(message[0] == '/'):
+            message = message [1:] 
+            answer = self.commands(clientsock, clientAddr, message)
+
+        else:
+            answer = message
+
+        return answer, client
+
+    def commands(self, clientsock, clientAddr, message):
+        answer = ''
+
+        if message in self.handlers.keys():
+           answer = self.handlers[message](clientAddr, message)
         else:
             answer += 'Comando inválido, tente:'
             answer += '\n/NICK'
@@ -139,49 +144,39 @@ class Server:
         """
         return answer
 
-    #Enviar mensagem para o canal
+    # Enviar mensagem para o canal
     def sendMsgChannel(self, msg, channel):
         for client in self.canais[channel].clients:
-            client.sendMsg(msg)
-        print('Enviar mensagem para o canal')
+            self.clients[client].sendMsg(msg)
 
     # Criar apelido ou mudar anterior
     def nickClientHandler(self, clientAddr, args):
-        print('Criar apelido')
-        pass
+        return 'Criar apelido'
+        
 
    # Especificar nome do usuario
     def userClientHandler(self, clientAddr, args):
-        print('Nome usr')
-        pass
+        return 'Nome usr'
 
     # Sair do canal
     def quitClientHandler(self, clientAddr, args):
-        print('Sair do servidor')
-        pass
+        return 'Sair do servidor'
 
     # Entrar no canal
     def subscribeChannelHandler(self, clientAddr, args):
-        print('Entrar no canal')
-        pass
+        return 'Entrar no canal'
 
     # Sair do canal
     def quitChannelHandler(self, clientAddr, args):
-        print('Sair do canal')
-        pass
+        return 'Sair do canal'
 
     # Listar canais
     def listChannelHandler(self, clientAddr, args):
-        print('Listar os canais')
-        pass
+        return 'Listar os canais'
 
 def main():
     Sever()
-
     pass
 
-# Para evitar dar pau com multiprocessos em python,
-#   sempre colocar essa guarda, que evita processos filhos
-#   de executarem a o conteúdo da função
 if __name__ == '__main__':
     Server()

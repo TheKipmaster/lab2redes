@@ -22,8 +22,17 @@ class Client:
         Client.numClients += 1
 
     def sendMsg(self, msg):
+        msg = self.nickname + ' : ' + msg   
         self.sock.send(bytes(msg, "utf-8"))
 
+    def __repr__(self):
+        return "<IPV4: %s\nSOCK: %s\nNICKNAME: %s\nHOSTNAME: %s\nCHANEEL: %s\n>" % (self.ipv4, self.sock, self.nickname, self.hostname, self.channel)
+
+    def __str__(self):
+        return "<From str method of Channel:\nIPV4: %s\nSOCK: %s\nNICKNAME: %s\nHOSTNAME: %s\nCHANEEL: %s\n>" % (self.ipv4, self.sock, self.nickname, self.hostname, self.channel)
+
+
+# Conecta o socket
 sck = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 sck.connect((host, 65000))
 
@@ -38,8 +47,7 @@ def outbound():
             sleep(0.2)
         except:
             print('Não pode completar a ação') 
-            open = False   
-            return 0
+            open = False
     return
 
 # Imprime mensagens para o usuario
