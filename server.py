@@ -3,8 +3,8 @@ import urllib.request
 from channel import Channel
 
 port = 65000
-#host = '192.168.0.16'
-host = '172.29.37.38'
+host = '192.168.0.16'
+#host = '172.29.37.38'
 
 class Server:
 
@@ -125,15 +125,19 @@ class Server:
 
    # Especificar nome do usuario
     def userClientHandler(self, clientAddr, args):
-        return 'Nome usr'
-
+        self.clients[clientAddr].hostname = args
+        return 'HostName alterado para: ' + args
     # Sair do canal
     def quitClientHandler(self, clientAddr, args):
         return 'Sair do servidor'
 
     # Entrar no canal
     def subscribeChannelHandler(self, clientAddr, args):
-        return 'Entrar no canal'
+        if args in self.canais:
+            self.canais[args].clients[clientAddr] = self.clients[clientAddr]
+            return 'Entrou no canal: ' + args
+        else:
+           return 'Canal "%s" Inválido\n' % args + self.listChannelHandler(clientAddr, args)
 
     # Sair do canal
     def quitChannelHandler(self, clientAddr, args):

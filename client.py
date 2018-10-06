@@ -6,8 +6,8 @@ import multiprocessing as mp
 from time import sleep
 
 port = 65000
-#host = '192.168.0.16'
-host = '172.29.37.38'
+host = '192.168.0.16'
+#host = '172.29.37.38'
 
 class Client:
     numClients = 0
